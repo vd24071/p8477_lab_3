@@ -1,0 +1,215 @@
+---
+title: "Lab 3"
+author: "Vanessa Dinh"
+output: html_document
+---
+
+```{r}
+library(deSolve)
+library(tidyverse)
+```
+
+# Setting SIR Model
+
+```{r}
+# Step 1: code the SIR model (or function here)
+sir = function(t, state, parameters){
+  with(as.list(c(state,parameters)),{
+    # rate of change
+    ds = -beta*s*i/n;
+    di = beta*s*i/n - gamma*i;
+    
+    # return the rate of change
+    list(c(ds, di))
+  }) # end with(as.list...)
+}
+
+```
+
+```{r}
+# Step 2: specify initial conditions/parameters
+n = 1e5; # population size
+i0 = 10; # initial No. of Infectious people
+s0 = n - i0;  # initial No. of Susceptible people
+state = c(s=s0, i=i0);  # store the inital conditions I & S together 
+parameters = c(beta=.5, gamma=.3);  # store the model parameters, unit: per day
+
+times = seq(0,100, by=1)  # set simulation time steps: 0 to 100 days here
+
+```
+
+```{r}
+# Step 3: call the ode function to generate the simulation
+sim = ode(y = state,times = times,func = sir, parms = parameters)
+```
+
+# Lab Exercise
+
+```{r}
+#Part 1: Find the final epidemic size using simulation
+
+n = 1e5; # population size
+i0 = 10; # initial No. of Infectious people
+s0 = n - i0;  # initial No. of Susceptible people
+state = c(s=s0, i=i0);  # store the inital conditions I & S together 
+parameters = c(beta=.5, gamma=.3);  # store the model parameters, unit: per day
+
+times = seq(0, 365, by=1)
+
+sim = ode(y = state,times = times,func = sir, parms = parameters)
+
+tail(sim)
+#       time  s       i
+#[366,]  365 32417.27 4.019123e-15
+
+#R = Total - S - I = 100,000 - 32,417 - 0 = 67,583
+
+sim_df = as.data.frame(sim)
+
+r_sim_df = 
+sim_df %>% 
+  mutate(
+    r = n - s - i
+  ) 
+tail(r_sim_df, 1)
+
+r_plot = 
+  r_sim_df %>% 
+  ggplot(aes(x = time, y = r)) +
+  geom_point(color = "green") +
+  xlab("Time (days)") +
+  ylab("Number of People Recovered") +
+  ggtitle("Number of People Recovered Over Time")
+```
+
+```{r}
+#Part 2: Test the epidemic threshold using different parameters
+
+n = 1e5; # population size
+i0 = 10; # initial No. of Infectious people
+s0 = n - i0;  # initial No. of Susceptible people
+state = c(s=s0, i=i0);  # store the inital conditions I & S together 
+
+#2.1: beta = 0.5, gamma = 0.3
+
+parameters = c(beta=.5, gamma=.3);  # store the model parameters, unit: per day
+
+times = seq(0, 100, by=1)
+
+sim_2.1 = ode(y = state,times = times,func = sir, parms = parameters)
+
+sim_2.1_df = as.data.frame(sim_2.1)
+
+sim_2.1_df_plot = 
+  sim_2.1_df %>% 
+  ggplot(aes(x = time, y = s)) +
+  geom_point(aes(color = "Susceptible")) +
+  geom_point(aes(x = time, y = i, color = "Infectious")) +
+  xlab("Time (days)") +
+  ylab("Number of People") +
+  ggtitle("Gamma = 0.3")
+```
+
+
+```{r}
+#2.2: beta = 0.5, gamma = 0.4
+
+parameters = c(beta=.5, gamma=.4);  # store the model parameters, unit: per day
+
+times = seq(0, 100, by=1)
+
+sim_2.2 = ode(y = state,times = times,func = sir, parms = parameters)
+
+sim_2.2_df = as.data.frame(sim_2.2)
+
+sim_2.2_df_plot = 
+  sim_2.2_df %>% 
+  ggplot(aes(x = time, y = s)) +
+  geom_point(aes(color = "Susceptible")) +
+  geom_point(aes(x = time, y = i, color = "Infectious")) +
+  xlab("Time (days)") +
+  ylab("Number of People") +
+  ggtitle("Gamma = 0.4")
+```
+
+```{r}
+#2.3: beta = 0.5, gamma = 0.5
+
+parameters = c(beta=.5, gamma=.5);  # store the model parameters, unit: per day
+
+times = seq(0, 100, by=1)
+
+sim_2.3 = ode(y = state,times = times,func = sir, parms = parameters)
+
+sim_2.3_df = as.data.frame(sim_2.3)
+
+sim_2.3_df_plot = 
+  sim_2.3_df %>% 
+  ggplot(aes(x = time, y = s)) +
+  geom_point(aes(color = "Susceptible")) +
+  geom_point(aes(x = time, y = i, color = "Infectious")) +
+  xlab("Time (days)") +
+  ylab("Number of People") +
+  ggtitle("Gamma = 0.5")
+```
+
+```{r}
+#2.4: beta = 0.5, gamma = 0.6
+
+parameters = c(beta=.5, gamma=.6);  # store the model parameters, unit: per day
+
+times = seq(0, 100, by=1)
+
+sim_2.4 = ode(y = state,times = times,func = sir, parms = parameters)
+
+sim_2.4_df = as.data.frame(sim_2.4)
+
+sim_2.4_df_plot = 
+  sim_2.4_df %>% 
+  ggplot(aes(x = time, y = s)) +
+  geom_point(aes(color = "Susceptible")) +
+  geom_point(aes(x = time, y = i, color = "Infectious")) +
+  xlab("Time (days)") +
+  ylab("Number of People") +
+  ggtitle("Gamma = 0.6")
+```
+
+```{r}
+# Part 3: Test the exponential period
+n = 1e5; i0=10; s0=n-i0;
+state=c(s=s0,i=i0);
+parameters=c(beta=.5,gamma=.3);
+
+sim_3 = ode(y = state,times = times,func = sir, parms = parameters)
+
+s_col = sim_3[,'s']/n
+i_col = sim_3[,'i']/n
+
+week_exp = 6; # CHANGE THE NUMBER OF WEEK HERE
+i_exp = sim_3[seq(1,length=week_exp,by=7),'i']; 
+# NOTE: THE TIME STEP IN THE SIMULATION IS DAY, BUT WE ARE LOOKING AT WEEK HERE
+# SO WE USE 'seq(1,length=WkExp,by=7)' TO EXTRACT THE CORRESPONDING DATE FOR EACH WEEK
+ln_i = log(i_exp); # TAKE THE LOG
+tt = seq(1,length=week_exp, by=7)
+fit = lm(ln_i~tt) # LINEAR REGRESSION
+slope = fit$coeff[2] ## extract the slope for the linear regression
+
+par(mfrow=c(1,1),cex=1.5)
+plot(tt,ln_i,xlab='Time')
+lines(tt,fit$coeff[1]+fit$coeff[2]*tt,col='red',lwd=2)
+
+#stop here
+sim_3_df = as.data.frame(sim_3)
+
+sim_3_df_plot = 
+  sim_3_df %>% 
+  filter(
+    time <= 49
+  ) %>% 
+  ggplot(aes(x = time, y = log(i))) +
+  geom_point(color = "red") +
+  xlab("Time (days)") +
+  ylab("Log of I") +
+  ggtitle("Log of I Over Time")
+```
+
